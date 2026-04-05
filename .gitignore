@@ -1,0 +1,22 @@
+# Laravel
+/vendor
+.env
+.env.*
+/storage/*.key
+
+# Node
+node_modules/
+npm-debug.log
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Otros
+.DS_Store
+.idea
+.vscode
+
+serviceAccountKey.json
+*.json

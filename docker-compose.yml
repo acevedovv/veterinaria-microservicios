@@ -1,0 +1,128 @@
+
+services:
+
+  # ── Bases de datos ──────────────────────────────────────────
+
+  mysql:
+    image: mysql:8.0
+    container_name: vet_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: vet_gateway
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-mysql.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  postgres:
+    image: postgres:15
+    container_name: vet_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  # ── Microservicios ──────────────────────────────────────────
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: vet_gateway
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: production
+      APP_KEY: ${GATEWAY_APP_KEY}
+      JWT_SECRET: veterinaria_super_secreto_2024
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: vet_gateway
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  ms-pacientes:
+    build: ./ms-pacientes
+    container_name: vet_pacientes
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      APP_ENV: production
+      APP_KEY: ${PACIENTES_APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: vet_pacientes
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  ms-citas:
+    build: ./ms-citas
+    container_name: vet_citas
+    restart: always
+    ports:
+      - "8002:8002"
+    environment:
+      DB_HOST: postgres
+      DB_NAME: vet_citas
+      DB_USER: postgres
+      DB_PASSWORD: secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ms-tratamientos:
+    build: ./ms-tratamientos
+    container_name: vet_tratamientos
+    restart: always
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: postgresql://postgres:secret@postgres:5432/vet_tratamientos
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ms-inventario:
+    build: ./ms-inventario
+    container_name: vet_inventario
+    restart: always
+    ports:
+      - "8004:8004"
+    
+
+  ms-facturacion:
+    build: ./ms-facturacion
+    container_name: vet_facturacion
+    restart: always
+    ports:
+      - "8005:8005"
+    
+
+volumes:
+  mysql_data:
+  postgres_data:

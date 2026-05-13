@@ -10,12 +10,12 @@ class ProxyController extends Controller
 
     // Mapa de rutas → URLs de microservicios
     private array $services = [
-        'pacientes'    => 'http://localhost:8001',
-        'citas'        => 'http://localhost:8002',
-        'tratamientos' => 'http://localhost:8003',
-        'inventario'   => 'http://localhost:8004',
-        'facturacion'  => 'http://localhost:8005',
-    ];
+    'pacientes'    => 'http://ms-pacientes:8001',
+    'citas'        => 'http://ms-citas:8002',
+    'tratamientos' => 'http://ms-tratamientos:8003',
+    'inventario'   => 'http://ms-inventario:8004',
+    'facturacion'  => 'http://ms-facturacion:8005',
+];
 
     public function __construct()
     {
